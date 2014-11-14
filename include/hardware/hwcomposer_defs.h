@@ -79,6 +79,14 @@ enum {
     HWC_SKIP_LAYER = 0x00000001,
 
     /*
+     * HWC_OVERLAY_SKIP_LAYER indicate HWC will not let the layer goto
+     * overlay. Add this as Marvell's HWC divide into Overlay and Baselay.
+     */
+#ifdef MRVL_HARDWARE
+    HWC_OVERLAY_SKIP_LAYER = 0x00010000,
+#endif
+
+    /*
      * HWC_IS_CURSOR_LAYER is set by surfaceflinger to indicate that this
      * layer is being used as a cursor on this particular display, and that
      * surfaceflinger can potentially perform asynchronous position updates for
@@ -126,6 +134,18 @@ enum {
 
     /* this layer will be handled in the HWC, using a blit engine */
     HWC_BLIT = 6,
+
+   /* HWC_2D is not used by compositionType, only used to count HWC_2D layers
+     * that go to HWC and use GC 2D Blit, compositionType will be other values defined privately
+     * in HWC_2D.
+     */
+#ifdef MRVL_HARDWARE
+    HWC_2D = 7,
+
+    /* HWC_2D_TARGET is for virtual GCU blit in HWC.
+     */
+    HWC_2D_TARGET = 8,
+#endif
 };
 /*
  * hwc_layer_t::blending values
@@ -138,7 +158,12 @@ enum {
     HWC_BLENDING_PREMULT  = 0x0105,
 
     /* SRC_ALPHA / ONE_MINUS_SRC_ALPHA */
-    HWC_BLENDING_COVERAGE = 0x0405
+    HWC_BLENDING_COVERAGE = 0x0405,
+
+    /* Dim layer */
+#ifdef MRVL_HARDWARE
+    HWC_BLENDING_DIM      = 0x0805,
+#endif
 };
 
 /*
@@ -206,6 +231,9 @@ enum {
      * Primary panel is always considered secure
      */
     HWC_DISPLAY_SECURE                      = 6,
+#ifdef MRVL_HARDWARE
+    HWC_DISPLAY_FORMAT                      = 7,
+#endif
 };
 
 /* Allowed events for hwc_methods::eventControl() */
