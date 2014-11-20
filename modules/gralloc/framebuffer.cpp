@@ -185,6 +185,11 @@ int mapFrameBufferLocked(struct private_module_t* module)
 
 
     uint32_t flags = PAGE_FLIP;
+
+    if (ioctl(fd, FBIOBLANK, FB_BLANK_POWERDOWN)) {
+        ALOGE("FB_BLANK_POWERDOWN failed: %s", strerror(errno));
+    }
+
 #if USE_PAN_DISPLAY
     if (ioctl(fd, FBIOPAN_DISPLAY, &info) == -1) {
         ALOGW("FBIOPAN_DISPLAY failed, page flipping not supported");
@@ -194,6 +199,10 @@ int mapFrameBufferLocked(struct private_module_t* module)
 #endif
         info.yres_virtual = info.yres;
         flags &= ~PAGE_FLIP;
+    }
+
+    if (ioctl(fd, FBIOBLANK, FB_BLANK_UNBLANK)) {
+        ALOGE("FB_BLANK_UNBLANK failed: %s", strerror(errno));
     }
 
     if (info.yres_virtual < info.yres * 2) {
