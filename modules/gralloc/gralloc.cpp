@@ -102,7 +102,7 @@ struct private_module_t HAL_MODULE_INFO_SYM = {
 /*****************************************************************************/
 
 static int gralloc_alloc_framebuffer_locked(alloc_device_t* dev,
-        size_t size, int usage, buffer_handle_t* pHandle)
+        size_t size, int usage, buffer_handle_t* pHandle, uint32_t* pStride)
 {
     private_module_t* m = reinterpret_cast<private_module_t*>(
             dev->common.module);
@@ -151,16 +151,18 @@ static int gralloc_alloc_framebuffer_locked(alloc_device_t* dev,
     hnd->offset = vaddr - intptr_t(m->framebuffer->base);
     *pHandle = hnd;
 
+    *pStride = m->finfo.line_length;
+
     return 0;
 }
 
 static int gralloc_alloc_framebuffer(alloc_device_t* dev,
-        size_t size, int usage, buffer_handle_t* pHandle)
+        size_t size, int usage, buffer_handle_t* pHandle, uint32_t* pStride)
 {
     private_module_t* m = reinterpret_cast<private_module_t*>(
             dev->common.module);
     pthread_mutex_lock(&m->lock);
-    int err = gralloc_alloc_framebuffer_locked(dev, size, usage, pHandle);
+    int err = gralloc_alloc_framebuffer_locked(dev, size, usage, pHandle, pStride);
     pthread_mutex_unlock(&m->lock);
     return err;
 }
@@ -203,7 +205,8 @@ static int gralloc_alloc(alloc_device_t* dev,
     if (!pHandle || !pStride)
         return -EINVAL;
 
-    size_t size, stride;
+    size_t size;
+    uint32_t stride;
 
     int align = 4;
     int bpp = 0;
@@ -229,7 +232,8 @@ static int gralloc_alloc(alloc_device_t* dev,
 
     int err;
     if (usage & GRALLOC_USAGE_HW_FB) {
-        err = gralloc_alloc_framebuffer(dev, size, usage, pHandle);
+        err = gralloc_alloc_framebuffer(dev, size, usage, pHandle, &stride);
+        stride /= bpp;
     } else {
         err = gralloc_alloc_buffer(dev, size, usage, pHandle);
     }
